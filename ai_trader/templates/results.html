@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Trading Results</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .bg-custom-50 { background-color: #F5FAF4; }
+    .bg-custom-100 { background-color: #D5F2D4; }
+    .bg-custom-200 { background-color: #A7E6B3; }
+    .bg-custom-300 { background-color: #83DDA7; }
+    .bg-custom-400 { background-color: #3BC490; }
+    .bg-custom-500 { background-color: #1DAF95; }
+    .bg-custom-600 { background-color: #109193; }
+    .bg-custom-700 { background-color: #0C6379; }
+    .bg-custom-800 { background-color: #0B4366; }
+    .bg-custom-900 { background-color: #0A2B57; }
+    .text-custom-900 { color: #0A2B57; }
+    .summary-box { background-color: #D5F2D4; border: 2px solid #0A2B57; }
+    td {
+      white-space: nowrap;
+    }
+    .small-column {
+      width: 100px; /* Adjust as needed */
+    }
+  </style>
+</head>
+<body class="bg-custom-100 text-custom-900 min-h-screen font-sans">
+  <div class="max-w-4xl mx-auto py-10 px-6">
+    <h1 class="text-3xl font-bold mb-8 text-center text-custom-700">
+      📈 Trading Simulation Results
+    </h1>
+
+    <div class="bg-custom-200 p-6 rounded-lg shadow-lg mb-8">
+      
+      <div class="grid grid-cols-3 gap-4 text-lg text-center">
+        <div class="p-4 rounded-lg shadow-md summary-box">
+          <div class="text-custom-600">Initial Value</div>
+          <div class="font-bold text-custom-900">${{ results.initial_value }}</div>
+        </div>
+        <div class="p-4 rounded-lg shadow-md summary-box">
+          <div class="text-custom-600">Final Value</div>
+          <div class="font-bold text-custom-900">${{ results.final_value }}</div>
+        </div>
+        <div class="p-4 rounded-lg shadow-md summary-box">
+          <div class="text-custom-600">Total Return</div>
+          <div class="font-bold text-custom-900">{{ results.total_return }}%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes Section -->
+    <div class="bg-custom-200 p-6 rounded-lg shadow-md mb-8">
+      <h2 class="text-xl font-semibold mb-4 text-custom-700">📝 Notes</h2>
+      <p class="text-custom-900">
+        This simulation provides insights into the trading strategy's performance over a specified period. 
+        The data includes daily portfolio values, cash positions, and trading signals.
+      </p>
+    </div>
+
+    <!-- Graph Section -->
+    <div class="bg-custom-200 p-6 rounded-lg shadow-md mb-8">
+      <h2 class="text-xl font-semibold mb-4 text-custom-700">📊 Portfolio Value Over Time</h2>
+      <canvas id="portfolioChart" width="400" height="200"></canvas>
+    </div>
+
+    <div class="bg-custom-200 p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold mb-4 text-custom-700">📋 Logs</h2>
+      <div class="overflow-x-auto max-h-[400px] overflow-y-scroll">
+        <table class="min-w-full divide-y divide-custom-600 text-sm text-custom-900">
+          <thead class="bg-custom-300 sticky top-0">
+            <tr>
+              <th class="px-4 py-2 text-left">Day</th>
+              <th class="px-4 py-2 text-left">Portfolio Value ($)</th>
+              <th class="px-4 py-2 text-left">Cash ($)</th>
+              <th class="px-4 py-2 text-left">Positions (Units)</th>
+              <th class="px-4 py-2 text-left">Signals</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-custom-600">
+            {% for entry in results.logs %}
+            <tr>
+              <td class="px-2 py-2">{{ entry.day }}</td>
+              <td class="px-2 py-2">${{ entry.portfolio_value }}</td>
+              <td class="px-2 py-2">${{ entry.cash }}</td>
+              <td class="px-2 py-2">
+                {% for symbol, amount in entry.positions.items() %}
+                  {{ symbol }}: {{ amount | round(3) }} units<br>
+                {% endfor %}
+              </td>
+              <td class="px-2 py-2">
+                {% for symbol, signal in entry.signals.items() %}
+                  {{ symbol }}: {{ signal.signal }} (Confidence: {{ signal.confidence | round(2) }})<br>
+                {% endfor %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('portfolioChart').getContext('2d');
+    const portfolioChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [{% for entry in results.logs %}{{ entry.day }}, {% endfor %}],
+        datasets: [{
+          label: 'Portfolio Value ($)',
+          data: [{% for entry in results.logs %}{{ entry.portfolio_value }}, {% endfor %}],
+          borderColor: 'rgba(10, 43, 87, 0.8)',
+          backgroundColor: 'rgba(10, 43, 87, 0.2)',
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Day'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Value ($)'
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
